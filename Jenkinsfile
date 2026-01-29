@@ -24,9 +24,13 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Pipeline finished'
-            archiveArtifacts artifacts: 'results/**', fingerprint: true
-        }
+    always {
+        perfReport(
+            sourceDataFiles: 'results/results.jtl',
+            errorFailedThreshold: 0,
+            errorUnstableThreshold: 0
+        )
+        archiveArtifacts artifacts: 'results/**'
+    }
     }
 }
