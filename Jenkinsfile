@@ -18,7 +18,7 @@ pipeline {
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
                       -l results/results.jtl \
-                      -e -o results/report
+                      -e -o results/report \
                       -f
                 '''
             }
