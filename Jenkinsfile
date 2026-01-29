@@ -19,6 +19,7 @@ pipeline {
                       -t test.jmx \
                       -l results/results.jtl \
                       -e -o results/report
+                      -f
                 '''
             }
         }
