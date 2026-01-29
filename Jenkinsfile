@@ -13,6 +13,7 @@ pipeline {
             steps {
                 echo 'Running JMeter'
                 sh '''
+                    rm -rf results/report
                     mkdir -p results
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
