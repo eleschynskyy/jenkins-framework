@@ -11,6 +11,7 @@ pipeline {
 
         stage('Run JMeter') {
             steps {
+                echo 'Running JMeter'
                 sh '''
                     mkdir -p results
                     jmeter -n \
