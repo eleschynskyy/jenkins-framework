@@ -14,7 +14,7 @@ pipeline {
                 echo 'Running JMeter'
                 sh '''
                     mkdir -p results
-                    jmeter -n \
+                    /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
                       -l results/results.jtl \
                       -e -o results/report
