@@ -25,8 +25,9 @@ pipeline {
                     echo "reports/build-${env.BUILD_NUMBER}"
                     echo "${env.JOB_NAME}-------${env.BUILD_NUMBER}"
                     def bp = params.Build_parameters?.trim() ?: ''
+                    echo ">>>>>>>>${bp}"
                     withEnv(["BUILD_PARAMS=${bp}"]) {
-                        echo 'XXXXXXXXXX ${BUILD_PARAMS}'
+                        echo "XXXXXXXXXX ${BUILD_PARAMS}"
                     }
                 } 
             }
