@@ -17,6 +17,7 @@ pipeline {
             steps {
                 script {
                     echo "reports/build-${env.BUILD_NUMBER}"
+                    echo "${env.JOB_NAME}-------${env.BUILD_NUMBER}"
                 } 
             }
         }
