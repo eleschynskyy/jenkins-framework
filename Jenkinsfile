@@ -3,6 +3,12 @@ pipeline {
 
     parameters {
         string(name: 'HOST', defaultValue: 'http://localhost', description: 'Base URL for all tools')
+        string(
+        defaultValue: '',
+        description: 'Parameters for build.sh script (optional). If empty, build.sh runs without parameters',
+        name: 'Build_parameters',
+        trim: true
+      )
     }
 
     stages {
@@ -18,6 +24,10 @@ pipeline {
                 script {
                     echo "reports/build-${env.BUILD_NUMBER}"
                     echo "${env.JOB_NAME}-------${env.BUILD_NUMBER}"
+                    def bp = params.Build_parameters?.trim() ?: ''
+                    withEnv(["BUILD_PARAMS=${bp}"]) {
+                        echo 'XXXXXXXXXX $BUILD_PARAMS'
+                    }
                 } 
             }
         }
