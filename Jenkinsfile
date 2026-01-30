@@ -13,6 +13,14 @@ pipeline {
             }
         }
 
+        stage('DEBUG') {
+            steps {
+                script {
+                    echo "reports/build-${env.BUILD_NUMBER}"
+                } 
+            }
+        }
+
         stage('Run JMeter') {
             steps {
                 echo 'Running JMeter'
