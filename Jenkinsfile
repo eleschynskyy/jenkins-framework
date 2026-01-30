@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'HOST', defaultValue: 'http://localhost', description: 'Base URL for all tools')
+    }
+
     stages {
         stage('Checkout') {
             steps {
