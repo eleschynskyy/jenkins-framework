@@ -53,12 +53,13 @@ pipeline {
             steps {
                 echo 'Running JMeter'
                 sh '''
-                    rm -rf results/report
-                    mkdir -p results
+                    ts_dir='${env.REPORT_ROOT}/jmeter'
+                    rm -rf "\${ts_dir}"
+                    mkdir -p "\${ts_dir}/report"
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
                       -l results/results.jtl \
-                      -e -o results/report \
+                      -e -o "\${ts_dir}/report" \
                       -f
                 '''
             }
@@ -72,7 +73,7 @@ pipeline {
             errorFailedThreshold: 0,
             errorUnstableThreshold: 0
         )
-        archiveArtifacts artifacts: 'results/**'
+        archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
     }
     }
 }
