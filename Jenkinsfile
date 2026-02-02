@@ -74,6 +74,15 @@ pipeline {
             errorUnstableThreshold: 0
         )
         archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
+
+        publishHTML([
+                reportName: 'JMeter Performance Report',
+                reportDir: '${env.REPORT_ROOT}/jmeter/report',
+                reportFiles: 'index.html',
+                keepAll: true,
+                alwaysLinkToLastBuild: true,
+                allowMissing: false
+        ])
     }
     }
 }
