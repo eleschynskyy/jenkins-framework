@@ -30,7 +30,6 @@ pipeline {
                     rm -rf "${env.REPORT_ROOT}"
                     mkdir -p "${env.REPORT_ROOT}/gatling" "${env.REPORT_ROOT}/jmeter" "${env.REPORT_ROOT}/lighthouse"
                     echo "PWD"
-                    echo $(pwd)
                 """
             }
         }
