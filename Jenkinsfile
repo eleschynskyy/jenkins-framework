@@ -19,6 +19,21 @@ pipeline {
             }
         }
 
+        stage('Prepare Reports') {
+            steps {
+                script {
+                    env.REPORT_ROOT = "reports/build-${env.BUILD_NUMBER}"
+                }
+                sh """
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    rm -rf "${env.REPORT_ROOT}"
+                    mkdir -p "${env.REPORT_ROOT}/gatling" "${env.REPORT_ROOT}/jmeter" "${env.REPORT_ROOT}/lighthouse"
+                    echo "Prepare Reports"
+                """
+            }
+        }
+
         stage('DEBUG') {
             steps {
                 script {
