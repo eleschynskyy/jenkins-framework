@@ -24,7 +24,7 @@ pipeline {
                 script {
                     env.REPORT_ROOT = "reports/build-${env.BUILD_NUMBER}"
                     echo "================================="
-                    echo ${env.REPORT_ROOT}
+                    echo ">>>>>>>>>>>${env.REPORT_ROOT}"
                 }
                 sh """
                     #!/usr/bin/env bash
