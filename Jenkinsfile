@@ -55,10 +55,10 @@ pipeline {
                 sh '''
                     ts_dir='${env.REPORT_ROOT}/jmeter'
                     rm -rf "\${ts_dir}"
-                    mkdir -p "\${ts_dir}/report"
+                    tree
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
-                      -l results/results.jtl \
+                      -l "\${ts_dir}/results.jtl" \
                       -e -o "\${ts_dir}/report" \
                       -f
                 '''
