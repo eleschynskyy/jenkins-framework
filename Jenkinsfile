@@ -68,11 +68,11 @@ pipeline {
     post {
     always {
         perfReport(
-            sourceDataFiles: 'results/results.jtl',
+            sourceDataFiles: '\${env.REPORT_ROOT}/jmeter/results.jtl',
             errorFailedThreshold: 0,
             errorUnstableThreshold: 0
         )
-        archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
+        archiveArtifacts artifacts: '\${env.REPORT_ROOT}/**/*', allowEmptyArchive: true
 
         // publishHTML([
         //         reportName: 'JMeter Performance Report',
