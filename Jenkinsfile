@@ -23,7 +23,6 @@ pipeline {
             steps {
                 script {
                     env.REPORT_ROOT = "reports/build-${env.BUILD_NUMBER}"
-                    echo "================================="
                     echo ">>>>>>>>>>>${env.REPORT_ROOT}"
                 }
                 sh """
@@ -40,7 +39,6 @@ pipeline {
         stage('DEBUG') {
             steps {
                 script {
-                    echo "reports/build-${env.BUILD_NUMBER}"
                     echo "${env.JOB_NAME}-------${env.BUILD_NUMBER}"
                     def bp = params.Build_parameters?.trim() ?: ''
                     echo ">>>>>>>>${bp}"
@@ -54,16 +52,16 @@ pipeline {
         stage('Run JMeter') {
             steps {
                 echo 'Running JMeter'
-                sh '''
-                    ts_dir='${env.REPORT_ROOT}/jmeter'
-                    rm -rf "\${ts_dir}"
-                    ls -l
+                sh """
+                    ts_dir="${env.REPORT_ROOT}/jmeter"
+                    rm -rf "${ts_dir}"
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
-                      -l "\${ts_dir}/results.jtl" \
-                      -e -o "\${ts_dir}/report" \
+                      -l "${ts_dir}/results.jtl" \
+                      -e -o "${ts_dir}/report" \
                       -f
-                '''
+                    ls -l ${ts_dir}
+                """
             }
         }
     }
