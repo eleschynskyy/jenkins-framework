@@ -76,14 +76,14 @@ pipeline {
         )
         archiveArtifacts artifacts: "${env.REPORT_ROOT}/**/*", allowEmptyArchive: true
 
-        // publishHTML([
-        //         reportName: 'JMeter Performance Report',
-        //         reportDir: '${env.REPORT_ROOT}/jmeter/report',
-        //         reportFiles: 'index.html',
-        //         keepAll: true,
-        //         alwaysLinkToLastBuild: true,
-        //         allowMissing: false
-        // ])
+        publishHTML([
+                reportName: "JMeter Report",
+                reportDir: "${env.REPORT_ROOT}/jmeter/report",
+                reportFiles: "index.html",
+                keepAll: true,
+                alwaysLinkToLastBuild: true,
+                allowMissing: false
+        ])
     }
     }
 }
