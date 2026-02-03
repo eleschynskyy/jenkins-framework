@@ -78,11 +78,12 @@ pipeline {
 
         publishHTML([
                 reportName: "JMeter Report",
-                reportDir: "${env.REPORT_ROOT}/jmeter/report",
+                reportDir: "${env.REPORT_ROOT}/jmeter/report/",
                 reportFiles: "index.html",
                 keepAll: true,
                 alwaysLinkToLastBuild: true,
                 allowMissing: false
+                includes: "**/*"
         ])
     }
     }
