@@ -54,8 +54,13 @@ pipeline {
                 echo 'Running JMeter'
                 sh """
                     #!/usr/bin/env
-                    ls -l ${env.REPORT_ROOT}
                     ts_dir="${env.REPORT_ROOT}/jmeter"
+                    /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
+                        -t test.jmx \
+                        -l "${ts_dir}/results.jtl" \
+                        -e -o "${ts_dir}/report" \
+                        -f
+                    ls -l ${ts_dir}
                 """
             }
         }
