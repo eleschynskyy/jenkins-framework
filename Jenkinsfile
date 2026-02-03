@@ -54,7 +54,6 @@ pipeline {
                 echo 'Running JMeter'
                 sh """
                     ts_dir="${env.REPORT_ROOT}/jmeter"
-                    rm -rf "${ts_dir}"
                     /Users/Yevhen_Leshchynskyy/EPAM/apache-jmeter-5.6.3/bin/jmeter -n \
                       -t test.jmx \
                       -l "${ts_dir}/results.jtl" \
@@ -75,14 +74,14 @@ pipeline {
         )
         archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
 
-        publishHTML([
-                reportName: 'JMeter Performance Report',
-                reportDir: '${env.REPORT_ROOT}/jmeter/report',
-                reportFiles: 'index.html',
-                keepAll: true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: false
-        ])
+        // publishHTML([
+        //         reportName: 'JMeter Performance Report',
+        //         reportDir: '${env.REPORT_ROOT}/jmeter/report',
+        //         reportFiles: 'index.html',
+        //         keepAll: true,
+        //         alwaysLinkToLastBuild: true,
+        //         allowMissing: false
+        // ])
     }
     }
 }
