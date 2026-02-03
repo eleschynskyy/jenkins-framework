@@ -67,23 +67,23 @@ pipeline {
         }
     }
 
-    // post {
-    // always {
-    //     // perfReport(
-    //     //     sourceDataFiles: '\${env.REPORT_ROOT}/jmeter/results.jtl',
-    //     //     errorFailedThreshold: 0,
-    //     //     errorUnstableThreshold: 0
-    //     // )
-    //     // archiveArtifacts artifacts: '\${env.REPORT_ROOT}/**/*', allowEmptyArchive: true
+    post {
+    always {
+        perfReport(
+            sourceDataFiles: '\${env.REPORT_ROOT}/jmeter/results.jtl',
+            errorFailedThreshold: 0,
+            errorUnstableThreshold: 0
+        )
+        archiveArtifacts artifacts: '\${env.REPORT_ROOT}/**/*', allowEmptyArchive: true
 
-    //     // publishHTML([
-    //     //         reportName: 'JMeter Performance Report',
-    //     //         reportDir: '${env.REPORT_ROOT}/jmeter/report',
-    //     //         reportFiles: 'index.html',
-    //     //         keepAll: true,
-    //     //         alwaysLinkToLastBuild: true,
-    //     //         allowMissing: false
-    //     // ])
-    // }
-    // }
+        // publishHTML([
+        //         reportName: 'JMeter Performance Report',
+        //         reportDir: '${env.REPORT_ROOT}/jmeter/report',
+        //         reportFiles: 'index.html',
+        //         keepAll: true,
+        //         alwaysLinkToLastBuild: true,
+        //         allowMissing: false
+        // ])
+    }
+    }
 }
