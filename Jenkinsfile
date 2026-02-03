@@ -29,7 +29,7 @@ pipeline {
                 sh """
                     #!/usr/bin/env bash
                     set -euo pipefail
-                    # rm -rf "\${env.REPORT_ROOT}"
+                    rm -rf "${env.REPORT_ROOT}"
                     # mkdir -p "\${env.REPORT_ROOT}/gatling" "\${env.REPORT_ROOT}/jmeter" "\${env.REPORT_ROOT}/lighthouse"
                     pwd
                     
