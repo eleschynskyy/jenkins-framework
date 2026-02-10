@@ -36,6 +36,25 @@ pipeline {
             }
         }
 
+        stage('Show Executors') {
+            steps {
+                script {
+                    def nodeName = env.NODE_NAME
+                    echo "Current node: ${nodeName}"
+                    def node = jenkins.model.Jenkins.instance.getNode(nodeName)
+                    
+                    // If null, it's the master node
+                    if (node == null) {
+                        // Master node info
+                        def masterExecutors = jenkins.model.Jenkins.instance.numExecutors
+                        echo "Running on master node with ${masterExecutors} executor(s)"
+                    } else {
+                        echo "Node '${nodeName}' has ${node.numExecutors} executor(s)"
+                    }
+                }
+            }
+        }
+
         stage('DEBUG') {
             steps {
                 script {
