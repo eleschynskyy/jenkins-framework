@@ -16,6 +16,7 @@ spec:
       containers:
         - name: jenkins
           image: sandbox/jenkins:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
