@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+        - name: jenkins
+          image: sandbox/jenkins:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CASC_JENKINS_CONFIG
+              value: /var/jenkins_home/casc_configs
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false"
+          volumeMounts:
+            - name: casc-volume
+              mountPath: /var/jenkins_home/casc_configs
+      volumes:
+        - name: casc-volume
+          configMap:
+            name: jenkins-casc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: jenkins
