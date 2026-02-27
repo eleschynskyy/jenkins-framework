@@ -5,6 +5,7 @@ security:
   scriptApproval:
     approvedSignatures:
       - "staticMethod jenkins.model.Jenkins getInstance"
+      - "method jenkins.model.Jenkins getNode java.lang.String"
 
 jobs:
   - script: >
