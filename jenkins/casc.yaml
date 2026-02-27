@@ -1,6 +1,13 @@
 jenkins:
   systemMessage: "Jenkins bootstrapped automatically"
 
+security:
+  scriptApproval:
+    approvedSignatures:
+      - "staticMethod jenkins.model.Jenkins getInstance"
+      - "method jenkins.model.Jenkins getNode java.lang.String"
+      - "method hudson.model.Node getNumExecutors"
+
 jobs:
   - script: >
       pipelineJob('sandbox') {
@@ -16,8 +23,5 @@ jobs:
             }
             scriptPath('Jenkinsfile')
           }
-        }
-        configure { project ->
-          project / 'definition' / 'sandbox'(false)
         }
       }
