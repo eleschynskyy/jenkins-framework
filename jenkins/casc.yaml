@@ -1,6 +1,11 @@
 jenkins:
   systemMessage: "Jenkins bootstrapped automatically"
 
+security:
+  scriptApproval:
+    approvedSignatures:
+      - "staticMethod jenkins.model.Jenkins getInstance"
+
 jobs:
   - script: >
       pipelineJob('sandbox') {
