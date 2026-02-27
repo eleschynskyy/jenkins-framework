@@ -3,3 +3,4 @@ job-dsl
 git
 workflow-aggregator
 github
+kubernetes

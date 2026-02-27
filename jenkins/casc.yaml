@@ -1,12 +1,22 @@
 jenkins:
   systemMessage: "Jenkins bootstrapped automatically"
 
-security:
-  scriptApproval:
-    approvedSignatures:
-      - "staticMethod jenkins.model.Jenkins getInstance"
-      - "method jenkins.model.Jenkins getNode java.lang.String"
-      - "method hudson.model.Node getNumExecutors"
+clouds:
+    - kubernetes:
+        name: "kubernetes"
+        namespace: "sandbox"
+        serverUrl: "https://kubernetes.default"
+        jenkinsUrl: "http://jenkins.sandbox.svc.cluster.local:8080"
+        containerCapStr: "10"
+        templates:
+          - name: "nft-agent"
+            label: "nft"
+            serviceAccount: "default"
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:latest"
+                ttyEnabled: true
+                args: "^${computer.jnlpmac} ^${computer.name}"
 
 jobs:
   - script: >

@@ -8,3 +8,26 @@ kubectl apply -f jenkins-deployment.yaml
 kubectl get po -n sandbox
 kubectl port-forward -n sandbox svc/jenkins 8080:8080
 
+security:
+  scriptApproval:
+    approvedSignatures:
+      - "staticMethod jenkins.model.Jenkins getInstance"
+      - "method jenkins.model.Jenkins getNode java.lang.String"
+      - "method hudson.model.Node getNumExecutors"
+
+        stage('Show Executors') {
+            steps {
+                script {
+                    def nodeName = env.NODE_NAME
+                    echo "Current node: ${nodeName}"
+                    def node = jenkins.model.Jenkins.instance.getNode(nodeName)
+    
+                    if (node == null) {
+                        def masterExecutors = jenkins.model.Jenkins.instance.numExecutors
+                        echo "Running on master node with ${masterExecutors} executor(s)"
+                    } else {
+                        echo "Node '${nodeName}' has ${node.numExecutors} executor(s)"
+                    }
+                }
+            }
+        }
