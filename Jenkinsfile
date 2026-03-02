@@ -19,7 +19,7 @@ pipeline {
 
     post {
     always {
-        echo "DONE"
+        echo "✅ DONE"
     }
     }
 }
