@@ -12,7 +12,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'echo Running inside dynamic Kubernetes agent: ${env.NODE_NAME}'
+                sh 'echo Running inside dynamic Kubernetes agent: $NODE_NAME'
             }
         }
     }
