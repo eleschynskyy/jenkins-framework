@@ -1,13 +1,20 @@
+# Job DSL runs from root-level "jobs"; use absolute path (cwd is not JENKINS_HOME at init)
+jobs:
+  - file: /var/jenkins_home/jobs-dsl/sandbox.groovy
+
 jenkins:
   systemMessage: "Jenkins bootstrapped automatically"
+  # Use WebSocket only for agents (no TCP port 50000); required when Jenkins is behind ClusterIP
+  slaveAgentPort: -1
 
-clouds:
+  clouds:
     - kubernetes:
         name: "kubernetes"
         namespace: "sandbox"
         serverUrl: "https://kubernetes.default"
         jenkinsUrl: "http://jenkins.sandbox.svc.cluster.local:8080"
         containerCapStr: "10"
+        webSocket: true
         templates:
           - name: "nft-agent"
             label: "nft"
@@ -18,20 +25,9 @@ clouds:
                 ttyEnabled: true
                 args: "^${computer.jnlpmac} ^${computer.name}"
 
-jobs:
-  - script: >
-      pipelineJob('sandbox') {
-        definition {
-          cpsScm {
-            scm {
-              git {
-                remote {
-                  url('https://github.com/eleschynskyy/jenkins-framework')
-                }
-                branch('*/main')
-              }
-            }
-            scriptPath('Jenkinsfile')
-          }
-        }
-      }
+security:
+  scriptApproval:
+    approvedSignatures:
+      - "staticMethod jenkins.model.Jenkins getInstance"
+      - "method jenkins.model.Jenkins getNode java.lang.String"
+      - "method hudson.model.Node getNumExecutors"

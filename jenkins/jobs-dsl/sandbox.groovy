@@ -1,0 +1,15 @@
+pipelineJob('sandbox') {
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('https://github.com/eleschynskyy/jenkins-framework')
+                    }
+                    branch('*/main')
+                }
+            }
+            scriptPath('Jenkinsfile')
+        }
+    }
+}

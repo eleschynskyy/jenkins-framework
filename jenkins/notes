@@ -1,10 +1,22 @@
-k3d cluster delete perf-sandbox 
-k3d cluster create perf-sandbox
-k3d image import sandbox/jenkins:latest -c perf-sandbox
-kubectl create namespace sandbox
-cd jenkins
-kubectl create configmap jenkins-casc --from-file=casc.yaml -n sandbox
-kubectl apply -f jenkins-deployment.yaml
+# --- Deploy to k3d (run from repo root) ---
+# k3d cluster delete perf-sandbox
+# k3d cluster create perf-sandbox
+# docker build -t sandbox/jenkins:latest jenkins/
+# k3d image import sandbox/jenkins:latest -c perf-sandbox
+
+# 1. Create namespace and RBAC (ServiceAccount + Role + RoleBinding)
+kubectl apply -f jenkins/namespace.yaml
+kubectl apply -f jenkins/jenkins-rbac.yaml
+
+# 2. Create ConfigMaps (run from repo root; or from jenkins/ and fix paths)
+kubectl create configmap jenkins-casc --from-file=casc.yaml=jenkins/casc_configs/casc.yaml -n sandbox --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap jenkins-jobs --from-file=jenkins/jobs-dsl/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
+
+# 3. Deploy Jenkins and Service
+kubectl apply -f jenkins/jenkins-deployment.yaml
+kubectl apply -f jenkins/jenkins-service.yaml
+
+# 4. Check and access
 kubectl get po -n sandbox
 kubectl port-forward -n sandbox svc/jenkins 8080:8080
 
