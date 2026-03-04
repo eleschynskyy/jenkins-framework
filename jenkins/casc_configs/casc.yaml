@@ -2,6 +2,20 @@
 jobs:
   - file: /var/jenkins_home/jobs-dsl/sandbox.groovy
 
+# Global Pipeline (shared) library — pipelines can use @Library('pipeline_library') or @Library('pipeline_library@main')
+unclassified:
+  globalLibraries:
+    libraries:
+      - name: "pipeline_library"
+        defaultVersion: "main"
+        allowVersionOverride: true
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "https://github.com/eleschynskyy/pipeline_library.git"
+                traits: []
+
 jenkins:
   systemMessage: "Jenkins bootstrapped automatically"
   # Use WebSocket only for agents (no TCP port 50000); required when Jenkins is behind ClusterIP

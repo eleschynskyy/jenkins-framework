@@ -4,7 +4,7 @@ pipelineJob('sandbox') {
             scm {
                 git {
                     remote {
-                        url('https://github.com/eleschynskyy/jenkins-framework')
+                        url('https://github.com/eleschynskyy/test_template.git')
                     }
                     branch('*/main')
                 }

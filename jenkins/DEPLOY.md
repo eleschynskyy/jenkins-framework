@@ -12,13 +12,19 @@ This deploys Jenkins in a Kubernetes cluster with Configuration-as-Code (JCasC),
 ConfigMaps and RBAC must exist before the Deployment, and the Deployment expects a ServiceAccount named `jenkins`. Apply in this order (from repo root):
 
 ```bash
+# 0. Cluster initial management
+docker build --no-cache -t sandbox/jenkins:latest .
+k3d cluster delete perf-sandbox
+k3d cluster create perf-sandbox
+k3d image import sandbox/jenkins:latest -c perf-sandbox
+
 # 1. Namespace and RBAC (ServiceAccount + Role + RoleBinding for the Kubernetes plugin)
 kubectl apply -f jenkins/namespace.yaml
 kubectl apply -f jenkins/jenkins-rbac.yaml
 
 # 2. ConfigMaps (JCasC and Job DSL scripts)
 kubectl create configmap jenkins-casc --from-file=casc.yaml=jenkins/casc_configs/casc.yaml -n sandbox --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap jenkins-jobs --from-file=jenkins/jobs/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap jenkins-jobs --from-file=jenkins/jobs-dsl/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
 
 # 3. Deployment and Service
 kubectl apply -f jenkins/jenkins-deployment.yaml
