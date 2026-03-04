@@ -6,3 +6,8 @@ kubernetes:latest
 job-dsl:latest
 script-security:latest
 credentials-binding:latest
+cloudbees-folder:latest
+amazon-ecs:latest
+workflow-job:latest
+workflow-cps:latest
+ws-cleanup:latest
