@@ -35,6 +35,7 @@ kubectl apply -f jenkins/jenkins-service.yaml
 
 ```bash
 kubectl get pods -n sandbox
+kubectl logs <pod> -n sandbox
 kubectl port-forward -n sandbox svc/jenkins 8080:8080
 ```
 
