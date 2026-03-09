@@ -14,9 +14,12 @@ ConfigMaps and RBAC must exist before the Deployment, and the Deployment expects
 ```bash
 # 0. Cluster initial management
 docker build --no-cache -t sandbox/jenkins:latest .
+docker build --no-cache -t sandbox/jmeter:latest .
+    docker run --rm -it -v "$(pwd)":/project sandbox/jmeter:latest ./run.sh
 k3d cluster delete perf-sandbox
 k3d cluster create perf-sandbox
 k3d image import sandbox/jenkins:latest -c perf-sandbox
+k3d image import sandbox/jmeter:latest -c perf-sandbox
 
 # 1. Namespace and RBAC (ServiceAccount + Role + RoleBinding for the Kubernetes plugin)
 kubectl apply -f jenkins/namespace.yaml
@@ -35,6 +38,7 @@ kubectl apply -f jenkins/jenkins-service.yaml
 
 ```bash
 kubectl get pods -n sandbox
+kubectl logs <pod> -n sandbox
 kubectl port-forward -n sandbox svc/jenkins 8080:8080
 ```
 

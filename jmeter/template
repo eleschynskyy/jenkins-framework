@@ -1,0 +1,137 @@
+# With the builder image we can compile code and download dependencies etc.. 
+FROM 548760365095.dkr.ecr.eu-west-1.amazonaws.com/nft-ubuntu2204-base:latest AS builder
+#Install updates and packages
+ENV DEBIAN_FRONTEND=noninteractive 
+RUN apt-get update && apt-get upgrade -y &&\
+    apt-get install unzip zip curl sed wget make apt gcc ca-certificates libc-bin libssl-dev openjdk-17-jdk git python3 python3-pip python3-dev libxml2-dev libxslt-dev groff bc python3-aiomeasures jq bc -y
+ARG GIT_API_TOKEN
+ENV GIT_API_TOKEN=${GIT_API_TOKEN}
+#Add CA for Hermes Umbrella
+COPY dependencies/cisco-root.crt /usr/local/share/ca-certificates/
+COPY dependencies/zscaler-root.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+#add key to python
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+#Configure Install Environment
+WORKDIR /root
+RUN mkdir dependencies
+#Copy in common-data-framework
+COPY dependencies/common-data-framework /root/dependencies/common-data-framework
+# Pull Jmeter Taurus Framework static repo
+RUN git clone "https://oauth2:${GIT_API_TOKEN}@gitlab.com/parcelscloud/nft/test-template/jmeter-taurus-framework-static.git" /root/dependencies/jmeter-taurus-framework-static
+#Install AWS Cli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN ./aws/install -i ~/dependencies/aws-cli -b ~/dependencies/aws-cli/bin
+RUN rm awscliv2.zip
+# Install Redis 
+RUN wget https://download.redis.io/releases/redis-7.0.14.tar.gz && tar -xf redis-7.0.14.tar.gz && mv redis-7.0.14 dependencies/redis &&\
+         rm redis-7.0.14.tar.gz && make -C /root/dependencies/redis/ BUILD_TLS=yes
+#INSTALL DB2 CLI
+COPY --chown=root dependencies/v11.5.4_linuxx64_rtcl.tar.gz /root/dependencies/
+RUN gunzip /root/dependencies/v11.5.4_linuxx64_rtcl.tar.gz && tar -xvf /root/dependencies/v11.5.4_linuxx64_rtcl.tar
+RUN echo "yes" | /root/rtcl/db2_install -p RTCL -f sysreq -b /opt/ibm/db2/V11.5 -c
+# Create a DB2 instance
+RUN useradd -m -d /home/db2inst1 -s /bin/bash db2inst1
+RUN /opt/ibm/db2/V11.5/instance/db2icrt -u db2inst1 db2inst1
+RUN . /home/db2inst1/sqllib/db2profile
+#Install SQL CLI
+RUN wget https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-23.3.0.270.1251.zip && unzip sqlcl-23.3.0.270.1251.zip &&\
+         mv sqlcl /root/dependencies/sqlcl && rm sqlcl-23.3.0.270.1251.zip
+#Install JMeter and basic plugins, redis, csv reader, oracle, etc..
+RUN wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip && unzip apache-jmeter-5.6.3.zip &&\
+         mv apache-jmeter-5.6.3 dependencies/jmeter && rm apache-jmeter-5.6.3.zip &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.10/jmeter-plugins-manager-1.10.jar && mv jmeter-plugins-manager-1.10.jar /root/dependencies/jmeter/lib/ext/jmeter-plugins-manager-1.10.jar &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar && mv cmdrunner-2.3.jar /root/dependencies/jmeter/lib/cmdrunner-2.3.jar &&\
+         java -cp /root/dependencies/jmeter/lib/ext/jmeter-plugins-manager-1.10.jar org.jmeterplugins.repository.PluginManagerCMDInstaller &&\
+         curl -JLO https://repo1.maven.org/maven2/com/blazemeter/jmeter-plugins-random-csv-data-set/0.8/jmeter-plugins-random-csv-data-set-0.8.jar && mv jmeter-plugins-random-csv-data-set-0.8.jar /root/dependencies/jmeter/lib/ext/jmeter-plugins-random-csv-data-set-0.8.jar &&\
+         curl -JLO https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar && mv commons-pool2-2.12.0.jar /root/dependencies/jmeter/lib/commons-pool2-2.12.0.jar &&\
+         curl -JLO https://repo1.maven.org/maven2/redis/clients/jedis/3.10.0/jedis-3.10.0.jar && mv jedis-3.10.0.jar /root/dependencies/jmeter/lib/jedis-3.10.0.jar &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/2.10/jmeter-plugins-casutg-2.10.jar && mv jmeter-plugins-casutg-2.10.jar /root/dependencies/jmeter/lib/ext/jmeter-plugins-casutg-2.10.jar &&\
+         curl -JLO https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc8/21.4.0.0.1/ojdbc8-21.4.0.0.1.jar && mv ojdbc8-21.4.0.0.1.jar /root/dependencies/jmeter/lib/ext/ojdbc8-21.4.0.0.1.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/com/oracle/database/jdbc/ucp/23.3.0.23.09/ucp-23.3.0.23.09.jar && mv ucp-23.3.0.23.09.jar /root/dependencies/jmeter/lib/ext/ucp-23.3.0.23.09.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/com/rabbitmq/amqp-client/5.20.0/amqp-client-5.20.0.jar && mv amqp-client-5.20.0.jar /root/dependencies/jmeter/lib/ext/amqp-client-5.20.0.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-dummy/0.4/jmeter-plugins-dummy-0.4.jar && mv jmeter-plugins-dummy-0.4.jar /root/dependencies/jmeter/lib/ext/jmeter-plugins-dummy-0.4.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.5.2/ivy-2.5.2.jar && mv ivy-2.5.2.jar   /root/dependencies/jmeter/lib/ivy-2.5.2.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-tst/2.6/jmeter-plugins-tst-2.6.jar && mv jmeter-plugins-tst-2.6.jar   /root/dependencies/jmeter/lib/ext/jmeter-plugins-tst-2.6.jar  &&\
+         curl -JLO https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-cmn-jmeter/0.7/jmeter-plugins-cmn-jmeter-0.7.jar && mv jmeter-plugins-cmn-jmeter-0.7.jar   /root/dependencies/jmeter/lib/jmeter-plugins-cmn-jmeter-0.7.jar &&\
+         curl -JLO https://jdbc.postgresql.org/download/postgresql-42.7.5.jar && mv postgresql-42.7.5.jar /root/dependencies/jmeter/lib/postgresql-42.7.5.jar &&\
+         curl -JLO https://jmeter-plugins.org/files/packages/awsmeter-3.0.0.zip && unzip awsmeter-3.0.0.zip && mv lib/ext/awsmeter-3.0.0.jar /root/dependencies/jmeter/lib/ext/awsmeter-3.0.0.jar &&\
+         rm -rf awsmeter-3.0.0.zip lib/ 
+
+#Prepare additional/custom Jmeter plugins
+COPY --chown=root dependencies/jmeter-plugins-redis-0.6-hermes.jar /root/dependencies/jmeter/lib/ext/
+COPY --chown=root dependencies/JMeterAMQP.jar /root/dependencies/jmeter/lib/
+COPY --chown=root dependencies/jedis-3.10.0.jar /root/dependencies/jmeter/lib/
+# This is the exported Image only include what is needed.
+FROM 548760365095.dkr.ecr.eu-west-1.amazonaws.com/nft-ubuntu2204-base:latest AS runtime-image
+ENV DEBIAN_FRONTEND=noninteractive 
+RUN apt-get update && apt-get upgrade -y &&\
+    #apt-get install curl sed ca-certificates openjdk-17-jdk python3 python3-pip groff bc jq bc postgresql-client -y  &&\
+    apt-get install curl sed ca-certificates openjdk-17-jdk python3 python3-pip groff bc jq bc postgresql-client mysql-client \
+    # Add DB2 required dependencies
+    libaio1 libstdc++6 libpam0g ksh -y &&\
+    apt-get clean autoclean &&\
+    apt-get autoremove --yes  &&\
+    rm -rf /var/lib/{apt,dpkg,cache,log}
+#Add CA for Hermes Umbrella
+COPY dependencies/cisco-root.crt /usr/local/share/ca-certificates/
+COPY dependencies/zscaler-root.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+#add key to python
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+#Install Blazemeter Taurus
+RUN pip3 install   --upgrade setuptools Cython 
+RUN pip3 install  bzt
+# Install Boto for AWS CLI In Python
+RUN pip3 install  boto3
+#Configure Environment
+WORKDIR /root
+RUN mkdir dependencies
+# Move AWS CLI to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/sqlcl /root/dependencies/sqlcl
+ENV SQL_HOME=/root/dependencies/sqlcl
+#Move AWS CLI to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/aws-cli /root/dependencies/aws-cli
+ENV AWS_HOME=/root/dependencies/aws-cli
+RUN mkdir .aws
+#Move Redis CLI to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/redis /root/dependencies/redis
+ENV REDIS_HOME=/root/dependencies/redis
+#Move DB2 CLI to Runtime Image
+COPY --chown=root:root --from=builder /opt/ibm/db2/V11.5/ /opt/ibm/db2/V11.5/
+# Create DB2 instance in runtime image
+RUN useradd -m -d /home/db2inst1 -s /bin/bash db2inst1
+RUN /opt/ibm/db2/V11.5/instance/db2icrt -u db2inst1 db2inst1
+# Copy sqllib directory from builder to runtime
+COPY --chown=db2inst1:db2inst1 --from=builder /home/db2inst1/sqllib /home/db2inst1/sqllib
+# Set DB2 environment variables correctly
+ENV DB2INSTANCE=db2inst1
+ENV DB2CLI=/home/db2inst1/sqllib
+ENV PATH=$DB2CLI/bin:$PATH
+# Create DB2 profile script to be sourced when needed
+RUN echo ". /home/db2inst1/sqllib/db2profile" > /etc/profile.d/db2profile.sh
+#Move JMETER to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/jmeter /root/dependencies/jmeter
+ENV JMETER_HOME=/root/dependencies/jmeter
+ENV JMETER_VER=5.6.3
+COPY --chown=root:root src/create-jmeter.sh /root/dependencies/create-jmeter.sh
+#Move common-data-framework to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/common-data-framework /root/dependencies/common-data-framework
+#Move jmeter taurus static files to Runtime Image
+COPY --chown=root:root --from=builder /root/dependencies/jmeter-taurus-framework-static /root/dependencies/jmeter-taurus-framework-static
+#Copy entrypoint script to image
+COPY dependencies/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+#Add everything to path
+RUN echo "export PATH="${JMETER_HOME}/bin:${REDIS_HOME}/src/:${SQL_HOME}/bin:${AWS_HOME}/bin:$PATH"" >> /root/.bashrc
+#RUN echo "export PATH=\"${JMETER_HOME}/bin:${REDIS_HOME}/src/:${SQL_HOME}/bin:${AWS_HOME}/bin:$PATH\"" >> /root/.bashrc
+# Source DB2 profile in .bashrc to ensure DB2 environment is properly set
+RUN echo ". /home/db2inst1/sqllib/db2profile" >> /root/.profile
+#Create working directory
+RUN mkdir project
+WORKDIR /root/project
+ENV BASE_DIR=/root/project
+ENV BASE_DIR_FUNC=/root/dependencies/common-data-framework
+ENTRYPOINT ["/bin/bash", "-l", "-c"]
+CMD ["/entrypoint.sh"]

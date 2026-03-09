@@ -11,3 +11,5 @@ amazon-ecs:latest
 workflow-job:latest
 workflow-cps:latest
 ws-cleanup:latest
+pipeline-stage-view:latest
+pipeline-graph-view:latest
