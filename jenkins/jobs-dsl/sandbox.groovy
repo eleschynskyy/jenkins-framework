@@ -1,4 +1,6 @@
 pipelineJob('sandbox') {
+    // Pipeline jobs do not support job-level node restriction (assignedNode is ignored).
+    // The Jenkinsfile in the repo MUST start with node('nft') or agent { label 'nft' }.
     definition {
         cpsScm {
             scm {
