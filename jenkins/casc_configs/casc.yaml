@@ -26,18 +26,62 @@ jenkins:
         name: "kubernetes"
         namespace: "sandbox"
         serverUrl: "https://kubernetes.default"
+        # Required when Jenkins runs in-cluster (e.g. k3d) so the plugin can talk to the API
+        skipTlsVerify: true
         jenkinsUrl: "http://jenkins.sandbox.svc.cluster.local:8080"
         containerCapStr: "10"
         webSocket: true
+        # Timeouts so the plugin doesn't hang waiting for API
+        connectTimeout: 10
+        readTimeout: 60
         templates:
           - name: "nft-agent"
             label: "nft"
             serviceAccount: "default"
+            showRawYaml: true
+            # net.ipv4.ip_local_port_range is usually allowlisted; tcp_tw_reuse is not in default allowlist
+            yaml: |
+              spec:
+                securityContext:
+                  sysctls:
+                    - name: net.ipv4.ip_local_port_range
+                      value: "1024 65535"
+            volumes:
+              - emptyDirVolume:
+                  memory: false
+                  mountPath: "/tmp"
+              - emptyDirVolume:
+                  memory: false
+                  mountPath: "/project"
+            # Kubernetes-native equivalents for per-run docker args:
+            # -e VAR=...  -> use env vars (can be overridden in pipeline via withEnv)
+            # -v ...      -> use mounted pod volumes
+            envVars:
+              - envVar:
+                  key: "JMETER_EXTRA_ARGS"
+                  value: ""
+              - envVar:
+                  key: "JMETER_ENV"
+                  value: "sandbox"
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest"
                 ttyEnabled: true
                 args: "^${computer.jnlpmac} ^${computer.name}"
+              # Runtime container for test execution; use in pipeline via container('jmeter') { ... }
+              # For k3d: build locally and run: k3d image import sandbox/jmeter:latest -c <cluster>
+              - name: "jmeter"
+                image: "sandbox/jmeter:latest"
+                alwaysPullImage: false
+                # Keep container interactive/alive (equivalent intent of `-i` in withDockerContainer flow)
+                command: "cat"
+                args: ""
+                ttyEnabled: true
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "500m"
+                resourceRequestMemory: "1Gi"
+                resourceLimitCpu: "2"
+                resourceLimitMemory: "4Gi"
 
 security:
   scriptApproval:
