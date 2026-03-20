@@ -1,0 +1,14 @@
+# Load dashboard JSONs from /etc/grafana/provisioning/dashboards/json
+# Add exported dashboard JSON files to grafana/dashboards/ and rebuild the ConfigMap (see MONITORING.md).
+apiVersion: 1
+
+providers:
+  - name: "default"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
