@@ -1,0 +1,19 @@
+# InfluxDB 2 datasource for Grafana.
+# Replace __INFLUXDB_TOKEN__ with your InfluxDB admin token (see MONITORING.md).
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://influxdb.sandbox.svc.cluster.local:8086
+    isDefault: true
+    secureJsonData:
+      token: 19246FC1-BA7F-47E3-8DDE-2145E621DBB6
+    jsonData:
+      version: Flux
+      httpMode: POST
+      organization: sandbox
+      defaultBucket: default
+      tlsSkipVerify: true

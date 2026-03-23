@@ -63,6 +63,20 @@ jenkins:
               - envVar:
                   key: "JMETER_ENV"
                   value: "sandbox"
+              # Inject JMeter secrets from K8s Secret; keys become env vars (e.g. my-secret -> MY_SECRET).
+              # In pipeline run jmeter with: -Jmy-secret=$MY_SECRET (see DEPLOY.md).
+              - secretEnvVar:
+                  key: "INFLUXDB_TOKEN"
+                  secretName: "influxdb-auth"
+                  secretKey: "influxdb-admin-token"
+              - secretEnvVar:
+                  key: "INFLUXDB_ORG_ID"
+                  secretName: "influxdb-auth"
+                  secretKey: "influxdb-org-id"
+              - secretEnvVar:
+                  key: "INFLUXDB_URL"
+                  secretName: "influxdb-auth"
+                  secretKey: "influxdb-url"
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest"

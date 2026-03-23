@@ -23,11 +23,21 @@ k3d image import sandbox/jmeter:latest -c perf-sandbox
 
 # 1. Namespace and RBAC (ServiceAccount + Role + RoleBinding for the Kubernetes plugin)
 kubectl apply -f jenkins/namespace.yaml
+# create secrets
 kubectl apply -f jenkins/jenkins-rbac.yaml
 
 # 2. ConfigMaps (JCasC and Job DSL scripts)
 kubectl create configmap jenkins-casc --from-file=casc.yaml=jenkins/casc_configs/casc.yaml -n sandbox --dry-run=client -o yaml | kubectl apply -f -
 kubectl create configmap jenkins-jobs --from-file=jenkins/jobs-dsl/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
+
+# 2b. (Optional) JMeter secrets – required if your JMeter script uses ${__property(my-secret,,)} etc.
+#     kubectl create secret generic jmeter-secrets -n sandbox --from-literal=my-secret=YOUR_VALUE
+
+kubectl create secret generic influxdb-auth -n sandbox \
+  --from-literal=influxdb-admin-password=<password> \
+  --from-literal=influxdb-admin-token=${UUID} \
+  --from-literal=influxdb-org-id=<name> \
+  --from-literal=influxdb-url=http://influxdb.sandbox:8086
 
 # 3. Deployment and Service
 kubectl apply -f jenkins/jenkins-deployment.yaml
@@ -97,7 +107,7 @@ After changing only JCasC or Job DSL files, you can update ConfigMaps and restar
 
 ```bash
 kubectl create configmap jenkins-casc --from-file=casc.yaml=jenkins/casc_configs/casc.yaml -n sandbox --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap jenkins-jobs --from-file=jenkins/jobs/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap jenkins-jobs --from-file=jenkins/jobs-dsl/ -n sandbox --dry-run=client -o yaml | kubectl apply -f -
 kubectl rollout restart deployment/jenkins -n sandbox
 ```
 
@@ -139,6 +149,33 @@ node('nft') {
 ```
 
 This avoids `docker: not found` and does not require Docker-in-Docker or host socket mounts.
+
+### Passing secrets to JMeter (e.g. `${__property(my-secret,,)}`)
+
+Secrets are provided to the JMeter container via a Kubernetes Secret and passed into JMeter as properties with `-J`.
+
+1. **Create the Secret** in the same namespace as Jenkins (e.g. `sandbox`):
+
+   ```bash
+   kubectl create secret generic jmeter-secrets -n sandbox \
+     --from-literal=my-secret=YOUR_ACTUAL_SECRET_VALUE
+   ```
+
+   Or use the example manifest and replace the placeholder: see `jmeter/secret-example.yaml`.
+
+2. **JCasC** is already configured to inject secret key `my-secret` as env var `MY_SECRET` into the agent pod (see `secretEnvVar` in `casc_configs/casc.yaml`). To add more keys, add more `secretEnvVar` entries and ensure the Secret has the same keys.
+
+3. **In the pipeline**, when running JMeter, pass the property from the env var so `${__property(my-secret,,)}` resolves:
+
+   ```groovy
+   container('jmeter') {
+     sh 'jmeter -n -t your-test.jmx -Jmy-secret=$MY_SECRET ...'
+   }
+   ```
+
+   Or build the `-J` args from multiple secrets, e.g. `-Jmy-secret=$MY_SECRET -Jother=$OTHER_SECRET`.
+
+The secret is only in the agent pod’s environment and in the JMeter process; avoid logging or writing it to workspace files. Create the `jmeter-secrets` Secret before running pipelines that need it; otherwise the agent pod may fail with `CreateContainerConfigError`. If your Jenkins/Kubernetes plugin does not support `secretEnvVar` in JCasC, remove that entry from `casc.yaml` and inject the secret via the pod template's `yaml` block using Kubernetes `envFrom.secretRef` for the jmeter container.
 
 ### Migrating from withDockerContainer(image, args)
 
